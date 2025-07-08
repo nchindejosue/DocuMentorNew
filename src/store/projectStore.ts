@@ -28,7 +28,7 @@ export const useProjectStore = create<ProjectState>((set) => ({
   setProjects: (projects) => set({ projects: Array.isArray(projects) ? projects : [] }),
   setCurrentProject: (project) => set({ currentProject: project }),
   setCurrentDocument: (document) => set({ currentDocument: document }),
-  setDocuments: (documents) => set({ documents }),
+  setDocuments: (documents) => set({ documents: Array.isArray(documents) ? documents : [] }),
   setDocumentHealth: (health) => set({ documentHealth: health }),
   setLoading: (loading) => set({ isLoading: loading }),
   addDocument: (document) => set((state) => ({ 
