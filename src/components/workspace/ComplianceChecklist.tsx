@@ -31,7 +31,7 @@ const ComplianceChecklist: React.FC = () => {
     return 'text-red-600';
   };
 
-  const fixableIssues = documentHealth.items.filter(item => item.fixable && item.status === 'fail');
+  const fixableIssues = (documentHealth.items || []).filter(item => item.fixable && item.status === 'fail');
 
   return (
     <div className="p-6 h-full overflow-y-auto">
@@ -95,7 +95,7 @@ const ComplianceChecklist: React.FC = () => {
       {/* Compliance Items */}
       <div className="space-y-3">
         <h4 className="text-sm font-medium text-gray-700">Compliance Items</h4>
-        {documentHealth.items.map((item, index) => (
+        {(documentHealth.items || []).map((item, index) => (
           <motion.div
             key={item.id}
             initial={{ opacity: 0, y: 10 }}
