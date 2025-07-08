@@ -60,7 +60,7 @@ const ComplianceChecklist: React.FC = () => {
       <div className="mb-6">
         <h4 className="text-sm font-medium text-gray-700 mb-3">Category Breakdown</h4>
         <div className="grid grid-cols-2 gap-3">
-          {Object.entries(documentHealth.categories).map(([category, score]) => (
+          {Object.entries(documentHealth.categories ?? {}).map(([category, score]) => (
             <div key={category} className="bg-gray-50 p-3 rounded-lg">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-700 capitalize">
