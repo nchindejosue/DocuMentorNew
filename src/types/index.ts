@@ -29,6 +29,7 @@ export interface Document {
   uploadedAt: string;
   status: 'processing' | 'ready' | 'error';
   content?: File; // Store the actual file content for processing
+  processedContent?: string; // Store processed HTML/text content for display
 }
 
 export interface ComplianceItem {

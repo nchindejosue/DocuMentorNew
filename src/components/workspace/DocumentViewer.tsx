@@ -40,13 +40,22 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({ document, onElementClic
     setError('');
 
     try {
-      // Simulate file content for demo purposes
-      const mockContent = await getMockDocumentContent(document);
-      
-      if (document.type === 'docx') {
-        await renderDocxContent(mockContent);
-      } else if (document.type === 'txt') {
-        setContent(mockContent);
+      if (document.processedContent) {
+        // Use already processed content
+        setContent(document.processedContent);
+      } else if (document.content) {
+        // Process the actual uploaded file
+        const processedContent = await documentService.getDocumentContent(document);
+        setContent(processedContent);
+      } else {
+        // Fallback to mock content for demo
+        const mockContent = await getMockDocumentContent(document);
+        
+        if (document.type === 'docx') {
+          await renderDocxContent(mockContent);
+        } else if (document.type === 'txt') {
+          setContent(mockContent);
+        }
       }
       // PDF rendering is handled by react-pdf component
     } catch (err) {
@@ -271,30 +280,36 @@ Next Meeting: January 22, 2024 at 2:00 PM`
                   animate={{ opacity: 1 }}
                   className="text-center"
                 >
-                  <PDFDocument
-                    file={`/api/documents/${document.id}/download`} // This would be the actual PDF URL
-                    onLoadSuccess={onDocumentLoadSuccess}
-                    loading={
-                      <div className="flex items-center justify-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                      </div>
-                    }
-                    error={
-                      <div className="text-center py-8">
-                        <p className="text-red-600">Failed to load PDF</p>
-                        <p className="text-sm text-gray-600 mt-2">
-                          Demo PDF rendering - In production, this would load the actual PDF file
-                        </p>
-                      </div>
-                    }
-                  >
-                    <Page
-                      pageNumber={pageNumber}
-                      scale={scale}
-                      rotate={rotation}
-                      className="shadow-lg"
-                    />
-                  </PDFDocument>
+                  {document.content ? (
+                    <PDFDocument
+                      file={document.content}
+                      onLoadSuccess={onDocumentLoadSuccess}
+                      loading={
+                        <div className="flex items-center justify-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        </div>
+                      }
+                      error={
+                        <div className="text-center py-8">
+                          <p className="text-red-600">Failed to load PDF</p>
+                          <p className="text-sm text-gray-600 mt-2">
+                            Please try uploading the PDF file again
+                          </p>
+                        </div>
+                      }
+                    >
+                      <Page
+                        pageNumber={pageNumber}
+                        scale={scale}
+                        rotate={rotation}
+                        className="shadow-lg"
+                      />
+                    </PDFDocument>
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-gray-600">PDF file not available</p>
+                    </div>
+                  )}
                   
                   {numPages > 1 && (
                     <div className="flex items-center justify-center space-x-4 mt-4">
