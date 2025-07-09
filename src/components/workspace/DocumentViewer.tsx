@@ -2,16 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FileText, Download, ZoomIn, ZoomOut, RotateCw } from 'lucide-react';
 import { Document as PDFDocument, Page, pdfjs } from 'react-pdf';
+import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.js?url';
 import mammoth from 'mammoth';
 import { Document } from '../../types';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 
 // Set up PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.js',
-  import.meta.url
-).toString();
+pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 interface DocumentViewerProps {
   document: Document | null;
