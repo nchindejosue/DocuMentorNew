@@ -6,7 +6,7 @@ import mammoth from 'mammoth';
 import { Document } from '../../types';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
-import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.js?url';
+import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.js?url';
 
 // Set up PDF.js worker - use Vite's ?url import for proper bundling
 pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
