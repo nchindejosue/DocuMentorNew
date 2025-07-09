@@ -190,6 +190,15 @@ const ProjectWorkspace: React.FC = () => {
 
           {/* Upload Area */}
           <div className="p-4 border-b border-gray-200">
+            <input
+              type="file"
+              multiple
+              accept=".docx,.pdf,.txt"
+              onChange={(e) => e.target.files && handleFileUpload(e.target.files)}
+              className="hidden"
+              id="file-upload"
+              disabled={isUploading}
+            />
             <div
               className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
                 dragOver ? 'border-blue-500 bg-blue-50' : 
@@ -199,6 +208,7 @@ const ProjectWorkspace: React.FC = () => {
               onDrop={handleDrop}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
+              onClick={() => !isUploading && document.getElementById('file-upload')?.click()}
             >
               {isUploading ? (
                 <>
@@ -216,20 +226,17 @@ const ProjectWorkspace: React.FC = () => {
                   </p>
                 </>
               )}
-              <input
-                type="file"
-                multiple
-                accept=".docx,.pdf,.txt"
-                onChange={(e) => e.target.files && handleFileUpload(e.target.files)}
-                className="hidden"
-                id="file-upload"
+              <Button 
+                variant="outline" 
+                size="sm" 
                 disabled={isUploading}
-              />
-              <label htmlFor="file-upload" className={isUploading ? 'pointer-events-none' : ''}>
-                <Button variant="outline" size="sm" disabled={isUploading}>
+                onClick={(e) => {
+                  e.stopPropagation();
+                  document.getElementById('file-upload')?.click();
+                }}
+              >
                   Choose Files
-                </Button>
-              </label>
+              </Button>
             </div>
           </div>
 
