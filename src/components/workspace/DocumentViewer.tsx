@@ -7,8 +7,11 @@ import { Document } from '../../types';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 
-// Set up PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+// Set up PDF.js worker - use a more reliable worker source
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.js',
+  import.meta.url,
+).toString();
 
 interface DocumentViewerProps {
   document: Document | null;
