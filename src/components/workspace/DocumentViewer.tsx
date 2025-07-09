@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FileText, Download, ZoomIn, ZoomOut, RotateCw } from 'lucide-react';
-import { Document as PDFDocument, Page, pdfjs } from 'react-pdf';
-import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.js?url';
+import { Viewer, Worker } from '@react-pdf-viewer/core';
+import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
+import '@react-pdf-viewer/core/lib/styles/index.css';
+import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 import mammoth from 'mammoth';
 import { Document } from '../../types';
+import { documentService } from '../../services/documentService';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
-
-// Set up PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 interface DocumentViewerProps {
   document: Document | null;
@@ -18,12 +18,12 @@ interface DocumentViewerProps {
 
 const DocumentViewer: React.FC<DocumentViewerProps> = ({ document, onElementClick }) => {
   const [content, setContent] = useState<string>('');
-  const [numPages, setNumPages] = useState<number>(0);
-  const [pageNumber, setPageNumber] = useState<number>(1);
-  const [scale, setScale] = useState<number>(1.0);
-  const [rotation, setRotation] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
+  const [pdfFileUrl, setPdfFileUrl] = useState<string>('');
+
+  // Create default layout plugin
+  const defaultLayoutPluginInstance = defaultLayoutPlugin();
 
   useEffect(() => {
     if (document) {
@@ -31,6 +31,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({ document, onElementClic
     } else {
       setContent('');
       setError('');
+      setPdfFileUrl('');
     }
   }, [document]);
 
@@ -46,8 +47,15 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({ document, onElementClic
         setContent(document.processedContent);
       } else if (document.content) {
         // Process the actual uploaded file
-        const processedContent = await documentService.getDocumentContent(document);
-        setContent(processedContent);
+        if (document.type === 'pdf') {
+          // For PDF files, create a blob URL for react-pdf-viewer
+          const file = document.content as File;
+          const url = URL.createObjectURL(file);
+          setPdfFileUrl(url);
+        } else {
+          const processedContent = await documentService.getDocumentContent(document);
+          setContent(processedContent);
+        }
       } else {
         // Fallback to mock content for demo
         const mockContent = await getMockDocumentContent(document);
@@ -58,7 +66,6 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({ document, onElementClic
           setContent(mockContent);
         }
       }
-      // PDF rendering is handled by react-pdf component
     } catch (err) {
       setError('Failed to load document');
       console.error('Document loading error:', err);
@@ -100,7 +107,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({ document, onElementClic
         <h2>5. Conclusion</h2>
         <p>This research demonstrates the significant potential of AI in revolutionizing document processing workflows, providing both immediate practical benefits and long-term strategic advantages.</p>
       `,
-      'business-report.pdf': 'PDF_CONTENT', // This will be handled by react-pdf
+      'business-report.pdf': 'PDF_CONTENT', // This will be handled by react-pdf-viewer
       'meeting-notes.txt': `Meeting Notes - Project Planning Session
 Date: January 15, 2024
 Attendees: Sarah Chen, Dr. Rodriguez, Mike Johnson
@@ -156,22 +163,14 @@ Next Meeting: January 22, 2024 at 2:00 PM`
     }
   };
 
-  const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
-    setNumPages(numPages);
-    setPageNumber(1);
-  };
-
-  const changePage = (offset: number) => {
-    setPageNumber(prevPageNumber => Math.min(Math.max(prevPageNumber + offset, 1), numPages));
-  };
-
-  const changeScale = (newScale: number) => {
-    setScale(Math.min(Math.max(newScale, 0.5), 3.0));
-  };
-
-  const rotateDocument = () => {
-    setRotation(prev => (prev + 90) % 360);
-  };
+  // Cleanup blob URL when component unmounts or document changes
+  useEffect(() => {
+    return () => {
+      if (pdfFileUrl) {
+        URL.revokeObjectURL(pdfFileUrl);
+      }
+    };
+  }, [pdfFileUrl]);
 
   if (!document) {
     return (
@@ -229,20 +228,6 @@ Next Meeting: January 22, 2024 at 2:00 PM`
         </div>
         
         <div className="flex items-center space-x-2">
-          {document.type === 'pdf' && (
-            <>
-              <Button variant="outline" size="sm" onClick={() => changeScale(scale - 0.1)}>
-                <ZoomOut className="h-4 w-4" />
-              </Button>
-              <span className="text-sm text-gray-600">{Math.round(scale * 100)}%</span>
-              <Button variant="outline" size="sm" onClick={() => changeScale(scale + 0.1)}>
-                <ZoomIn className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="sm" onClick={rotateDocument}>
-                <RotateCw className="h-4 w-4" />
-              </Button>
-            </>
-          )}
           <Button variant="outline" size="sm">
             <Download className="h-4 w-4 mr-2" />
             Export
@@ -279,60 +264,18 @@ Next Meeting: January 22, 2024 at 2:00 PM`
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="text-center"
+                  className="h-96"
                 >
-                  {document.content ? (
-                    <PDFDocument
-                      file={document.content}
-                      onLoadSuccess={onDocumentLoadSuccess}
-                      loading={
-                        <div className="flex items-center justify-center py-8">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                        </div>
-                      }
-                      error={
-                        <div className="text-center py-8">
-                          <p className="text-red-600">Failed to load PDF</p>
-                          <p className="text-sm text-gray-600 mt-2">
-                            Please try uploading the PDF file again
-                          </p>
-                        </div>
-                      }
-                    >
-                      <Page
-                        pageNumber={pageNumber}
-                        scale={scale}
-                        rotate={rotation}
-                        className="shadow-lg"
+                  {pdfFileUrl ? (
+                    <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
+                      <Viewer
+                        fileUrl={pdfFileUrl}
+                        plugins={[defaultLayoutPluginInstance]}
                       />
-                    </PDFDocument>
+                    </Worker>
                   ) : (
                     <div className="text-center py-8">
                       <p className="text-gray-600">PDF file not available</p>
-                    </div>
-                  )}
-                  
-                  {numPages > 1 && (
-                    <div className="flex items-center justify-center space-x-4 mt-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => changePage(-1)}
-                        disabled={pageNumber <= 1}
-                      >
-                        Previous
-                      </Button>
-                      <span className="text-sm text-gray-600">
-                        Page {pageNumber} of {numPages}
-                      </span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => changePage(1)}
-                        disabled={pageNumber >= numPages}
-                      >
-                        Next
-                      </Button>
                     </div>
                   )}
                 </motion.div>
