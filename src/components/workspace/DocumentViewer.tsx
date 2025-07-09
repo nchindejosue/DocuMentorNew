@@ -220,32 +220,40 @@ Next Meeting: January 22, 2024 at 2:00 PM`
 
   return (
     <div className="h-full flex flex-col">
-      {/* Document Controls */}
-      <div className="bg-white border-b border-gray-200 p-4 flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <h2 className="text-lg font-semibold text-gray-900">{document.title}</h2>
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-            document.status === 'ready' ? 'bg-green-100 text-green-800' :
-            document.status === 'processing' ? 'bg-yellow-100 text-yellow-800' :
-            'bg-red-100 text-red-800'
-          }`}>
-            {document.status}
-          </span>
-        </div>
-        
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
-        </div>
-      </div>
-
       {/* Document Content */}
-      <div className="flex-1 overflow-auto bg-gray-100 p-8">
-        <div className="max-w-4xl mx-auto">
-          <Card>
-            <div className="p-8">
+      <div className="flex-1 overflow-auto bg-gray-100">
+        <div className={`${document.type === 'pdf' ? 'h-full' : 'max-w-4xl mx-auto p-8'}`}>
+          {document.type === 'pdf' ? (
+            // Full-height PDF viewer without card wrapper
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="h-full"
+            >
+              {pdfFileUrl ? (
+                <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
+                  <Viewer
+                    fileUrl={pdfFileUrl}
+                    plugins={[defaultLayoutPluginInstance]}
+                    onLoadError={(error) => {
+                      console.error('PDF load error:', error);
+                      setError('Failed to load PDF file');
+                    }}
+                  />
+                </Worker>
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading PDF...</p>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          ) : (
+            // Card wrapper for non-PDF documents
+            <Card>
+              <div className="p-8">
               {document.type === 'docx' && (
                 <motion.div
                   initial={{ opacity: 0 }}
@@ -265,34 +273,9 @@ Next Meeting: January 22, 2024 at 2:00 PM`
                   {content}
                 </motion.div>
               )}
-              
-              {document.type === 'pdf' && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="min-h-96"
-                >
-                  {pdfFileUrl ? (
-                    <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
-                      <Viewer
-                        fileUrl={pdfFileUrl}
-                        plugins={[defaultLayoutPluginInstance]}
-                        onLoadError={(error) => {
-                          console.error('PDF load error:', error);
-                          setError('Failed to load PDF file');
-                        }}
-                      />
-                    </Worker>
-                  ) : (
-                    <div className="text-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                      <p className="text-gray-600">Loading PDF...</p>
-                    </div>
-                  )}
-                </motion.div>
-              )}
-            </div>
-          </Card>
+              </div>
+            </Card>
+          )}
         </div>
       </div>
     </div>
