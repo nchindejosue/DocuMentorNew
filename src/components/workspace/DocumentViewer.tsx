@@ -261,7 +261,7 @@ Next Meeting: January 22, 2024 at 2:00 PM`
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="prose max-w-none"
+                  className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-p:text-gray-800 prose-strong:text-gray-900 prose-em:italic prose-ul:list-disc prose-ol:list-decimal prose-li:my-1 prose-blockquote:border-l-4 prose-blockquote:border-gray-300 prose-blockquote:pl-4 prose-blockquote:italic"
                   onClick={handleElementClick}
                   dangerouslySetInnerHTML={{ __html: content }}
                 />

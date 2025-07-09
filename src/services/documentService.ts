@@ -71,11 +71,64 @@ export const documentService = {
       reader.onload = async (e) => {
         try {
           const arrayBuffer = e.target?.result as ArrayBuffer;
-          const result = await mammoth.convertToHtml({ arrayBuffer });
-          resolve(result.value);
+          const result = await mammoth.convertToHtml({ 
+            arrayBuffer,
+            options: {
+              styleMap: [
+                "p[style-name='Heading 1'] => h1:fresh",
+                "p[style-name='Heading 2'] => h2:fresh",
+                "p[style-name='Heading 3'] => h3:fresh",
+                "p[style-name='Heading 4'] => h4:fresh",
+                "p[style-name='Heading 5'] => h5:fresh",
+                "p[style-name='Heading 6'] => h6:fresh",
+                "p[style-name='Title'] => h1.title:fresh",
+                "p[style-name='Subtitle'] => h2.subtitle:fresh",
+                "p[style-name='Quote'] => blockquote:fresh",
+                "p[style-name='Intense Quote'] => blockquote.intense:fresh",
+                "p[style-name='List Paragraph'] => p.list-paragraph:fresh",
+                "r[style-name='Strong'] => strong",
+                "r[style-name='Emphasis'] => em"
+              ],
+              includeDefaultStyleMap: true,
+              convertImage: mammoth.images.imgElement(function(image) {
+                return image.read("base64").then(function(imageBuffer) {
+                  return {
+                    src: "data:" + image.contentType + ";base64," + imageBuffer
+                  };
+                });
+              })
+            }
+          });
+          
+          // Clean up the HTML and add proper formatting
+          let cleanHtml = result.value;
+          
+          // Ensure proper paragraph spacing
+          cleanHtml = cleanHtml.replace(/<p><\/p>/g, '<br>');
+          cleanHtml = cleanHtml.replace(/<p>/g, '<p style="margin-bottom: 1em; line-height: 1.6;">');
+          
+          // Style headings
+          cleanHtml = cleanHtml.replace(/<h1>/g, '<h1 style="font-size: 2em; font-weight: bold; margin: 1.5em 0 0.5em 0; color: #1f2937;">');
+          cleanHtml = cleanHtml.replace(/<h2>/g, '<h2 style="font-size: 1.5em; font-weight: bold; margin: 1.3em 0 0.5em 0; color: #1f2937;">');
+          cleanHtml = cleanHtml.replace(/<h3>/g, '<h3 style="font-size: 1.25em; font-weight: bold; margin: 1.2em 0 0.5em 0; color: #1f2937;">');
+          cleanHtml = cleanHtml.replace(/<h4>/g, '<h4 style="font-size: 1.1em; font-weight: bold; margin: 1.1em 0 0.5em 0; color: #1f2937;">');
+          
+          // Style lists
+          cleanHtml = cleanHtml.replace(/<ul>/g, '<ul style="margin: 1em 0; padding-left: 2em; list-style-type: disc;">');
+          cleanHtml = cleanHtml.replace(/<ol>/g, '<ol style="margin: 1em 0; padding-left: 2em; list-style-type: decimal;">');
+          cleanHtml = cleanHtml.replace(/<li>/g, '<li style="margin: 0.5em 0;">');
+          
+          // Style blockquotes
+          cleanHtml = cleanHtml.replace(/<blockquote>/g, '<blockquote style="margin: 1.5em 0; padding: 1em; border-left: 4px solid #d1d5db; background-color: #f9fafb; font-style: italic;">');
+          
+          // Style strong and emphasis
+          cleanHtml = cleanHtml.replace(/<strong>/g, '<strong style="font-weight: bold;">');
+          cleanHtml = cleanHtml.replace(/<em>/g, '<em style="font-style: italic;">');
+          
+          resolve(cleanHtml);
         } catch (error) {
           console.error('Error converting DOCX:', error);
-          resolve('<p>Error reading DOCX file. Please try again.</p>');
+          resolve('<p style="color: #ef4444;">Error reading DOCX file. Please try again.</p>');
         }
       };
       reader.onerror = () => reject(new Error('Failed to read DOCX file'));

@@ -10,7 +10,9 @@ import {
   CheckSquare,
   BarChart3,
   History,
-  Users
+  Users,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { useProjectStore } from '../../store/projectStore';
@@ -40,6 +42,8 @@ const ProjectWorkspace: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'compliance' | 'chat' | 'style' | 'history' | 'collaboration'>('compliance');
   const [dragOver, setDragOver] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [leftPanelMinimized, setLeftPanelMinimized] = useState(false);
+  const [rightPanelMinimized, setRightPanelMinimized] = useState(false);
 
   useEffect(() => {
     if (projectId) {
@@ -177,7 +181,26 @@ const ProjectWorkspace: React.FC = () => {
       
       <div className="h-[calc(100vh-64px)] flex">
         {/* Left Sidebar - Files */}
-        <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
+        <motion.div 
+          initial={false}
+          animate={{ width: leftPanelMinimized ? '48px' : '320px' }}
+          transition={{ duration: 0.3 }}
+          className="bg-white border-r border-gray-200 flex flex-col relative"
+        >
+          {/* Minimize Button */}
+          <button
+            onClick={() => setLeftPanelMinimized(!leftPanelMinimized)}
+            className="absolute -right-3 top-4 z-10 w-6 h-6 bg-white border border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-50 transition-colors"
+          >
+            {leftPanelMinimized ? (
+              <ChevronRight className="h-3 w-3 text-gray-600" />
+            ) : (
+              <ChevronLeft className="h-3 w-3 text-gray-600" />
+            )}
+          </button>
+
+          {!leftPanelMinimized && (
+            <>
           {/* Project Header */}
           <div className="p-4 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900 mb-1">
@@ -275,7 +298,17 @@ const ProjectWorkspace: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
+            </>
+          )}
+
+          {leftPanelMinimized && (
+            <div className="p-2 border-b border-gray-200">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+                <FileText className="h-4 w-4 text-white" />
+              </div>
+            </div>
+          )}
+        </motion.div>
 
         {/* Center Panel - Document Viewer */}
         <div className="flex-1 flex flex-col">
@@ -333,7 +366,26 @@ const ProjectWorkspace: React.FC = () => {
         </div>
 
         {/* Right Sidebar - Interactive Mentor */}
-        <div className="w-96 bg-white border-l border-gray-200 flex flex-col">
+        <motion.div 
+          initial={false}
+          animate={{ width: rightPanelMinimized ? '48px' : '384px' }}
+          transition={{ duration: 0.3 }}
+          className="bg-white border-l border-gray-200 flex flex-col relative"
+        >
+          {/* Minimize Button */}
+          <button
+            onClick={() => setRightPanelMinimized(!rightPanelMinimized)}
+            className="absolute -left-3 top-4 z-10 w-6 h-6 bg-white border border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-50 transition-colors"
+          >
+            {rightPanelMinimized ? (
+              <ChevronLeft className="h-3 w-3 text-gray-600" />
+            ) : (
+              <ChevronRight className="h-3 w-3 text-gray-600" />
+            )}
+          </button>
+
+          {!rightPanelMinimized && (
+            <>
           {/* Tab Navigation */}
           <div className="border-b border-gray-200">
             <nav className="flex space-x-0">
@@ -358,7 +410,17 @@ const ProjectWorkspace: React.FC = () => {
           <div className="flex-1 overflow-hidden">
             {renderTabContent()}
           </div>
-        </div>
+            </>
+          )}
+
+          {rightPanelMinimized && (
+            <div className="p-2 border-b border-gray-200">
+              <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
+                <MessageSquare className="h-4 w-4 text-white" />
+              </div>
+            </div>
+          )}
+        </motion.div>
       </div>
     </div>
   );
