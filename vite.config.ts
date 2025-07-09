@@ -5,6 +5,6 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
-    exclude: ['lucide-react', '@react-pdf-viewer/core', '@react-pdf-viewer/default-layout'],
+    exclude: ['lucide-react'],
   },
 });
