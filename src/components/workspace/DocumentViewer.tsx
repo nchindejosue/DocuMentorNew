@@ -40,22 +40,28 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({ document, onElementClic
 
     setIsLoading(true);
     setError('');
+    setPdfFileUrl(''); // Clear previous PDF URL
 
     try {
-      if (document.processedContent) {
-        // Use already processed content
-        setContent(document.processedContent);
-      } else if (document.content) {
-        // Process the actual uploaded file
-        if (document.type === 'pdf') {
-          // For PDF files, create a blob URL for react-pdf-viewer
+      if (document.type === 'pdf') {
+        // Handle PDF files specifically
+        if (document.content && document.content instanceof File) {
+          // Create blob URL from the uploaded file
           const file = document.content as File;
+          console.log('Creating PDF blob URL for file:', file.name, 'Size:', file.size);
           const url = URL.createObjectURL(file);
           setPdfFileUrl(url);
         } else {
-          const processedContent = await documentService.getDocumentContent(document);
-          setContent(processedContent);
+          // Fallback for demo PDF
+          setError('PDF file content not available');
         }
+      } else if (document.processedContent) {
+        // Use already processed content for non-PDF files
+        setContent(document.processedContent);
+      } else if (document.content) {
+        // Process the actual uploaded file for non-PDF files
+        const processedContent = await documentService.getDocumentContent(document);
+        setContent(processedContent);
       } else {
         // Fallback to mock content for demo
         const mockContent = await getMockDocumentContent(document);
@@ -264,18 +270,23 @@ Next Meeting: January 22, 2024 at 2:00 PM`
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="h-96"
+                  className="min-h-96"
                 >
                   {pdfFileUrl ? (
                     <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
                       <Viewer
                         fileUrl={pdfFileUrl}
                         plugins={[defaultLayoutPluginInstance]}
+                        onLoadError={(error) => {
+                          console.error('PDF load error:', error);
+                          setError('Failed to load PDF file');
+                        }}
                       />
                     </Worker>
                   ) : (
                     <div className="text-center py-8">
-                      <p className="text-gray-600">PDF file not available</p>
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                      <p className="text-gray-600">Loading PDF...</p>
                     </div>
                   )}
                 </motion.div>
